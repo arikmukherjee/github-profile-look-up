@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub Profile Lookup</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef2f7; --surface:#ffffff; --ink:#14213d; --muted:#5b6b86; --line:#d5dde9;
+  --accent:#2f6fed; --accent-ink:#ffffff; --cell:#cfe0ff; --error:#b3261e;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f1624; --surface:#172034; --ink:#e8eefc; --muted:#93a3c0; --line:#26324c;
+    --accent:#6c9bff; --accent-ink:#0f1624; --cell:#1c2b4a; --error:#ff8a80; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+  background:var(--bg); color:var(--ink); line-height:1.5; min-height:100vh;
+  background-image:
+    linear-gradient(var(--cell) 1px,transparent 1px),
+    linear-gradient(90deg,var(--cell) 1px,transparent 1px);
+  background-size:28px 28px; background-position:-1px -1px;
+}
+main{max-width:980px;margin:0 auto;padding:56px 20px 80px}
+h1{font-size:clamp(2rem,6vw,3.6rem);font-weight:800;letter-spacing:-.03em;line-height:1.05;margin:0 0 12px}
+.lead{color:var(--muted);max-width:52ch;margin:0 0 28px;font-size:1.05rem}
+form{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+input[type=text]{
+  flex:1 1 280px;font:inherit;padding:14px 16px;border:2px solid var(--ink);border-radius:6px;
+  background:var(--surface);color:var(--ink);
+}
+button{font:inherit;font-weight:600;cursor:pointer}
+form button{padding:14px 26px;border:2px solid var(--ink);border-radius:6px;background:var(--accent);color:var(--accent-ink)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.msg{padding:14px 16px;border-radius:6px;background:var(--surface);border:2px solid var(--line)}
+.msg.error{border-color:var(--error);color:var(--error)}
+.card{background:var(--surface);border:2px solid var(--ink);border-radius:8px;padding:24px}
+.profile{display:grid;grid-template-columns:140px 1fr;gap:24px;align-items:start}
+.profile img{width:140px;height:140px;border-radius:8px;border:2px solid var(--ink);display:block}
+.profile h2{margin:0;font-size:1.8rem;letter-spacing:-.02em;line-height:1.15}
+.handle{color:var(--muted);margin:2px 0 10px}
+.bio{margin:0 0 12px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:.95rem;padding:0;margin:0;list-style:none}
+.meta a{color:var(--accent)}
+.hero{display:flex;align-items:baseline;gap:14px;margin:24px 0 12px;flex-wrap:wrap}
+.hero .big{font-size:clamp(3rem,10vw,5.5rem);font-weight:800;letter-spacing:-.04em;line-height:1}
+.hero .label{color:var(--muted);max-width:30ch}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:24px}
+.stat{background:var(--surface);border:2px solid var(--line);border-radius:6px;padding:12px 14px}
+.stat b{display:block;font-size:1.5rem;letter-spacing:-.02em}
+.stat span{color:var(--muted);font-size:.9rem}
+h3{margin:28px 0 12px;font-size:1.2rem}
+.langbar{display:flex;height:14px;border-radius:4px;overflow:hidden;border:2px solid var(--ink);margin-bottom:10px}
+.langbar div{height:100%}
+.langs{display:flex;flex-wrap:wrap;gap:6px 16px;padding:0;margin:0;list-style:none;font-size:.9rem}
+.langs i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+select{font:inherit;padding:8px 10px;border:2px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink)}
+.repos{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.repo{background:var(--surface);border:2px solid var(--line);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.repo a{color:var(--ink);font-weight:600;text-decoration:none;word-break:break-word}
+.repo a:hover{color:var(--accent);text-decoration:underline}
+.repo p{margin:0;color:var(--muted);font-size:.92rem;flex:1}
+.repo .row{display:flex;gap:12px;flex-wrap:wrap;font-size:.85rem;color:var(--muted)}
+.tag{border:1px solid var(--line);border-radius:4px;padding:0 6px;font-size:.75rem}
+.orgs{display:flex;gap:8px;flex-wrap:wrap}
+.orgs img{width:40px;height:40px;border-radius:6px;border:2px solid var(--line)}
+.note{color:var(--muted);font-size:.85rem;margin-top:20px}
+[hidden]{display:none!important}
+@media(max-width:560px){.profile{grid-template-columns:1fr}.profile img{width:96px;height:96px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Look up any GitHub profile</h1>
+  <p class="lead">Paste a profile link or a username to see the account's details, repositories, languages and more.</p>
+
+  <form id="form">
+    <input type="text" id="input" placeholder="https://github.com/torvalds" aria-label="GitHub profile link or username" autocomplete="off" required>
+    <button type="submit">Search profile</button>
+  </form>
+
+  <div id="status" role="status" aria-live="polite"></div>
+  <div id="result" hidden></div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const statusEl = $("status"), resultEl = $("result");
+let allRepos = [];
+
+const LANG_COLORS = {JavaScript:"#f1e05a",TypeScript:"#3178c6",Python:"#3572a5",Java:"#b07219",HTML:"#e34c26",CSS:"#8a5cf6",
+  "C++":"#f34b7d",C:"#8f8f8f","C#":"#178600",Go:"#00add8",Rust:"#dea584",PHP:"#4f5d95",Ruby:"#701516",Shell:"#89e051",
+  Kotlin:"#a97bff",Swift:"#f05138",Dart:"#00b4ab","Jupyter Notebook":"#da5b0b",Vue:"#41b883",Lua:"#000080"};
+const langColor = (l) => LANG_COLORS[l] || "#7a8aa8";
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtDate = (d) => new Date(d).toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});
+const num = (n) => Number(n).toLocaleString();
+
+function parseUsername(value){
+  let v = value.trim();
+  const m = v.match(/github\.com\/([^\/?#\s]+)/i);
+  if (m) v = m[1];
+  v = v.replace(/^@/, "").replace(/\/+$/, "");
+  return /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i.test(v) ? v : null;
+}
+
+async function gh(path){
+  const res = await fetch("https://api.github.com" + path, {headers:{Accept:"application/vnd.github+json"}});
+  if (res.status === 404) throw new Error("No GitHub account found with that name. Check the spelling and try again.");
+  if (res.status === 403 || res.status === 429) {
+    const reset = res.headers.get("x-ratelimit-reset");
+    const when = reset ? " Try again at " + new Date(reset*1000).toLocaleTimeString() + "." : "";
+    throw new Error("GitHub's request limit for this network was reached." + when);
+  }
+  if (!res.ok) throw new Error("GitHub returned an error (" + res.status + "). Try again shortly.");
+  return res.json();
+}
+
+async function fetchAllRepos(user, count){
+  const pages = Math.min(Math.ceil(count/100), 10); // up to 1000 repos
+  const reqs = [];
+  for (let p = 1; p <= pages; p++) reqs.push(gh(`/users/${user}/repos?per_page=100&page=${p}&type=owner`));
+  return (await Promise.all(reqs)).flat();
+}
+
+$("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const user = parseUsername($("input").value);
+  resultEl.hidden = true;
+  if (!user) { statusEl.innerHTML = '<div class="msg error">That doesn\'t look like a GitHub link or username. Try https://github.com/username.</div>'; return; }
+  statusEl.innerHTML = '<div class="msg">Loading profile…</div>';
+  try {
+    const profile = await gh(`/users/${user}`);
+    const [repos, orgs] = await Promise.all([
+      fetchAllRepos(user, profile.public_repos),
+      gh(`/users/${user}/orgs`).catch(() => [])
+    ]);
+    allRepos = repos;
+    render(profile, repos, orgs);
+    statusEl.innerHTML = "";
+  } catch (err) {
+    statusEl.innerHTML = '<div class="msg error">' + esc(err.message || "Something went wrong. Check your connection and try again.") + "</div>";
+  }
+});
+
+function render(p, repos, orgs){
+  const stars = repos.reduce((a,r)=>a+r.stargazers_count,0);
+  const forksGot = repos.reduce((a,r)=>a+r.forks_count,0);
+  const forkedRepos = repos.filter(r=>r.fork).length;
+  const langCount = {};
+  repos.forEach(r => { if (r.language) langCount[r.language] = (langCount[r.language]||0)+1; });
+  const langs = Object.entries(langCount).sort((a,b)=>b[1]-a[1]);
+  const langTotal = langs.reduce((a,[,n])=>a+n,0);
+
+  const metaItems = [
+    p.company && `Company: ${esc(p.company)}`,
+    p.location && `Location: ${esc(p.location)}`,
+    p.blog && `Website: <a href="${esc(/^https?:\/\//i.test(p.blog)?p.blog:"https://"+p.blog)}" target="_blank" rel="noopener noreferrer">${esc(p.blog)}</a>`,
+    p.twitter_username && `X/Twitter: @${esc(p.twitter_username)}`,
+    p.email && `Email: ${esc(p.email)}`,
+    `Joined ${fmtDate(p.created_at)}`,
+    `Last updated ${fmtDate(p.updated_at)}`,
+    p.hireable && "Available for hire"
+  ].filter(Boolean).map(i=>`<li>${i}</li>`).join("");
+
+  resultEl.innerHTML = `
+  <section class="card profile">
+    <img src="${esc(p.avatar_url)}&s=280" alt="Avatar of ${esc(p.login)}">
+    <div>
+      <h2>${esc(p.name || p.login)}</h2>
+      <p class="handle">@${esc(p.login)} · ${esc(p.type)} · <a href="${esc(p.html_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">Open on GitHub</a></p>
+      ${p.bio ? `<p class="bio">${esc(p.bio)}</p>` : ""}
+      <ul class="meta">${metaItems}</ul>
+    </div>
+  </section>
+
+  <div class="hero">
+    <span class="big">${num(p.public_repos)}</span>
+    <span class="label">public repositories created by @${esc(p.login)}</span>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b>${num(p.followers)}</b><span>Followers</span></div>
+    <div class="stat"><b>${num(p.following)}</b><span>Following</span></div>
+    <div class="stat"><b>${num(p.public_gists)}</b><span>Public gists</span></div>
+    <div class="stat"><b>${num(stars)}</b><span>Stars received</span></div>
+    <div class="stat"><b>${num(forksGot)}</b><span>Forks of their repos</span></div>
+    <div class="stat"><b>${num(forkedRepos)}</b><span>Repos that are forks</span></div>
+  </div>
+
+  ${langs.length ? `
+  <h3>Languages across repositories</h3>
+  <div class="langbar" role="img" aria-label="Language share">
+    ${langs.map(([l,n])=>`<div style="width:${n/langTotal*100}%;background:${langColor(l)}" title="${esc(l)}"></div>`).join("")}
+  </div>
+  <ul class="langs">
+    ${langs.slice(0,8).map(([l,n])=>`<li><i style="background:${langColor(l)}"></i>${esc(l)} ${Math.round(n/langTotal*100)}%</li>`).join("")}
+  </ul>` : ""}
+
+  ${orgs.length ? `
+  <h3>Organizations</h3>
+  <div class="orgs">${orgs.map(o=>`<a href="https://github.com/${esc(o.login)}" target="_blank" rel="noopener noreferrer" title="${esc(o.login)}"><img src="${esc(o.avatar_url)}&s=80" alt="${esc(o.login)}"></a>`).join("")}</div>` : ""}
+
+  <h3>Repositories</h3>
+  <div class="tools">
+    <select id="sort" aria-label="Sort repositories">
+      <option value="updated">Recently updated</option>
+      <option value="stars">Most stars</option>
+      <option value="created">Newest created</option>
+      <option value="name">Name</option>
+    </select>
+    <select id="filter" aria-label="Filter repositories">
+      <option value="all">All repos</option>
+      <option value="source">Original only</option>
+      <option value="fork">Forks only</option>
+    </select>
+  </div>
+  <div class="repos" id="repos"></div>
+  <p class="note">Counts include public data only. Private repositories aren't visible through GitHub's public API.${p.public_repos > 1000 ? " Only the first 1,000 repositories are listed." : ""}</p>
+  `;
+  resultEl.hidden = false;
+  $("sort").addEventListener("change", drawRepos);
+  $("filter").addEventListener("change", drawRepos);
+  drawRepos();
+}
+
+function drawRepos(){
+  const sort = $("sort").value, filter = $("filter").value;
+  let list = allRepos.filter(r => filter==="all" || (filter==="fork") === r.fork);
+  const sorters = {
+    updated:(a,b)=>new Date(b.pushed_at)-new Date(a.pushed_at),
+    stars:(a,b)=>b.stargazers_count-a.stargazers_count,
+    created:(a,b)=>new Date(b.created_at)-new Date(a.created_at),
+    name:(a,b)=>a.name.localeCompare(b.name)
+  };
+  list = [...list].sort(sorters[sort]);
+  $("repos").innerHTML = list.length ? list.map(r => `
+    <article class="repo">
+      <a href="${esc(r.html_url)}" target="_blank" rel="noopener noreferrer">${esc(r.name)}</a>
+      <p>${esc(r.description || "No description.")}</p>
+      <div class="row">
+        ${r.language ? `<span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;background:${langColor(r.language)}"></i>${esc(r.language)}</span>` : ""}
+        <span>★ ${num(r.stargazers_count)}</span>
+        <span>Forks ${num(r.forks_count)}</span>
+        <span>Created ${fmtDate(r.created_at)}</span>
+        ${r.fork ? '<span class="tag">fork</span>' : ""}${r.archived ? '<span class="tag">archived</span>' : ""}
+      </div>
+    </article>`).join("") : '<div class="msg">No repositories match this filter.</div>';
+}
+</script>
+</body>
+</html>
